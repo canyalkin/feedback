@@ -1,361 +1,151 @@
 function Stacker(){
 
+// @NOTE: Indentation is your friend. Use whitespace to improve readability.
+
 // Brick Variables
-var
-EMPTY = 0,
-WALL = 1,
-BLOCK = 2,
-GOLD = 3;
+var EMPTY = 0,
+	WALL = 1,
+	BLOCK = 2,
+	GOLD = 3;
 
 // Direction Variables
 var RIGHT = 0,
-UP = 1,
-LEFT = 2,
-DOWN = 3,
-facing = 0, 
-direction = ["Right", "Up", "Left", "Down"];
+	UP = 1,
+	LEFT = 2,
+	DOWN = 3,
+	facing = 0,
+	direction = ["Right", "Up", "Left", "Down"];
 
-// Location & Mapping Variables
-/* Max and min variables are relative to start position. 
-The distinction between abs_max and max is that max is the maximum x value for the maximum y */
-var x=0, y=0, up = 0, 
-map_mode = 0,
-abs_max_x, abs_max_y,
-abs_min_y, abs_min_x, 
-max_y, max_x, 
-min_y, min_x,
-gold_x, gold_y,
-initial_search = new Array();
+/** 
+ *
+ * Location & Mapping Variables
+ *
+ * @NOTE: Multi-line comments should look like this.
+ *	Avoid long lines wherever possible
+ *
+ * Max and min variables are relative to start position. 
+ * The distinction between abs_max and max is that max is
+ * the maximum x value for the maximum y
+ *
+ */
 
-/* The map array contains 324 objects (18 x 18), one for each cell on the map including the walls of the maze.
-Information included in each object are location, type, level, and whether or not that particular cell has
-been mapped i.e. visited by the troll */ 
-var map = [ 	
-   [{x_coord: 0, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:10, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:11, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:12, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:13, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:14, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:15, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:16, y_coord: 0, type: 1, level: 0, mapped:0},
-	{x_coord:17, y_coord: 0, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 1, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 1, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 1, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 2, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 2, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 2, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 3, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 3, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 3, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 4, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 4, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 4, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 5, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 5, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 5, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 6, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 6, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 6, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 7, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 7, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 7, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 8, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 8, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 8, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord: 9, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord: 9, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord: 9, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:10, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:10, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:10, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:11, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:11, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:11, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:12, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:12, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:12, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:13, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:13, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:13, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:14, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:14, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:14, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:15, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:15, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:15, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:16, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 2, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 3, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 4, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 5, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 6, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 7, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 8, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord: 9, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:10, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:11, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:12, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:13, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:14, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:15, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:16, y_coord:16, type: 0, level: 0, mapped:0},
-	{x_coord:17, y_coord:16, type: 1, level: 0, mapped:0}],	
-   [{x_coord: 0, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 1, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 2, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 3, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 4, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 5, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 6, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 7, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 8, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord: 9, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:10, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:11, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:12, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:13, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:14, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:15, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:16, y_coord:17, type: 1, level: 0, mapped:0},
-	{x_coord:17, y_coord:17, type: 1, level: 0, mapped:0}],
-	];
+var x = 0,
+	y = 0,
+	up = 0,
+	map_mode = 0,
+	abs_max_x, abs_max_y,
+	abs_min_y, abs_min_x,
+	max_y, max_x,
+	min_y, min_x,
+	gold_x, gold_y,
+	// @NOTE: Use [] over "new Array()" and {} over "new Object()"
+	initial_search = [];
+
+/**
+ *
+ * The map array contains 324 objects (18 x 18), one for each cell
+ * on the map including the walls of the maze. Information included
+ * in each object are location, type, level, and whether or not that
+ * particular cell has been mapped i.e. visited by the troll 
+ *
+ */
+
+/**
+ *
+ * @NOTE: The whitespace in this document appears to be mixing and matching
+ * 	spaces with tabs. The standard for this is 2 or 4 spaces per tab.
+ *	And it's usually a good idea to convert tabs to spaces in your IDE.
+ *
+ * @NOTE: Depending on the language and styleguide, camelCase is more
+ *	appropriate than underscore'd variable names. In this case, I would
+ *	say camelCase would be the preferred naming schema.
+ *
+ */
+
+
+/**
+ *
+ * buildTypeMap()
+ *
+ * @param arrayOfXcoords {Array} - The locations of the bricks
+ * @param all {Boolean} - A flag to make every x_coord a brick
+ * @return {Object} - A map of xCoords (key) to bricks (value)
+ *
+ */
+var buildTypeMap = function( arrayOfXcoords, all ) {
+	var coord,
+		ret = {},
+		i = 0,
+		// This is ternary style
+		l = all ? 17 : arrayOfXcoords.length;
+
+	// @NOTE: This is an example of being too clever as ternary makes things harder
+	//	to read... but has the added benefit of making similar code less redundant.
+	for ( ; i < l; i++ ) {
+		coord = all ? i : arrayOfXcoords[ i ];
+		ret[ coord ] = 1;
+	}
+
+	return ret;
+};
+
+/**
+ *
+ * buildLevel()
+ *
+ * @param yCoord {Integer} - The height of the level
+ * @param typeMap {Object} - The location of the bricks
+ * @return {Array} - A list of coordinates for the level
+ *
+ */
+var buildLevel = function( yCoord, typeMap ) {
+	// @NOTE: This is the "aired-out" style preferred by the ONTRAPORT team on the frontend
+	var ret = [];
+
+	for ( var i = 0, l = 17; i < l; i++ ) {
+		ret.push( {
+			"x_coord": i,
+			"y_coord": yCoord,
+			// Look up the type of this brick in the typeMap; defaults to 0
+			"type": typeMap[ i ] || "0",
+			"level": 0,
+			"mapped": 0
+		} );
+	}
+
+	return ret;
+};
+
+/**
+ *
+ * buildMap() - creates the map
+ *
+ * @return {Array} - An array of levels
+ *
+ */
+var buildMap = function(){
+	var ret = [],
+		commonTypeMap = buildTypeMap( [ 0, 17 ] ),
+		allBricksTypeMap = buildTypeMap( undefined, true );
+
+	// Create level 0
+	ret.push( buildLevel( 0, allBricksTypeMap ) );
+
+	// Create levels 1 - 16
+	for ( var i = 1, l = 16; i <= l; i++ ) {
+		ret.push( buildLevel( i, commonTypeMap ) );
+	}
+
+	// Create level 17
+	ret.push( buildLevel( 17, allBricksTypeMap ) );
+
+	return ret;
+};
+
+var map = buildMap();
+
+
+
 
 /* the map_graph array is a special array to be passed to the A* pathfinding algorithm.
 It is composed of boolean values for each of the 324 locations. 
@@ -382,28 +172,48 @@ var map_graph = [
 	[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
 	[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
 	[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
-	[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]];
+	[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
 
 // Secondary Search
 /* During the secondary search, the troll heads to eight discrete locations, which in 
 a perfect maze would provide complete coverage of the maze. */
 var search_point = 0,
-search_points = [
-	{x_coord:14, y_coord:13},
-	{x_coord: 3, y_coord:13},
-	{x_coord: 3, y_coord:10},
-	{x_coord:14, y_coord:10},
-	{x_coord:14, y_coord: 7},
-	{x_coord: 3, y_coord: 7},
-	{x_coord: 3, y_coord: 4},
-	{x_coord:14, y_coord: 4}];
+	search_points = [
+		{ x_coord: 14, y_coord: 13 },
+		{ x_coord: 3, y_coord: 13 },
+		{ x_coord: 3, y_coord: 10 },
+		{ x_coord: 14, y_coord: 10 },
+		{ x_coord: 14, y_coord: 7 },
+		{ x_coord: 3, y_coord: 7 },
+		{ x_coord: 3, y_coord: 4 },
+		{ x_coord: 14, y_coord: 4 }
+	];
 
-// Movement Variables	
-var have_brick_target = 0, have_brick = 0,
-have_ladder_target = 0, scaffold_iteration = 0,
-quadrant = 1, secondary_quadrant = 2, tertiary_quadrant = 3, 
-target_x = 14, target_y = 13, route_iterate = 1, next_obs = 0, graph, start, end,
-result = [], block_route = [], blocks = [], secondary_blocks = [], tertiary_blocks = [], master_blocks = [], scaffold_all = [];
+// Movement Variables
+var have_brick_target = 0,
+	have_brick = 0,
+	have_ladder_target = 0,
+	scaffold_iteration = 0,
+	quadrant = 1,
+	secondary_quadrant = 2, 
+	tertiary_quadrant = 3, 
+	target_x = 14,
+	target_y = 13,
+	route_iterate = 1,
+	next_obs = 0, 
+	graph, 
+	start, 
+	end,
+	result = [],
+	block_route = [],
+	blocks = [],
+	secondary_blocks = [],
+	tertiary_blocks = [],
+	master_blocks = [],
+	scaffold_all = [];
+
+
 var scaffold = [
 	{x_coord: 1, y_coord:-1},
 	{x_coord: 1, y_coord: 0},
@@ -468,9 +278,13 @@ var scaffold = [
 	
 // Utility & Search Variables
 var turn_counter = 0,
-VERBOSE = 1;
+	VERBOSE = 1;
 
 // ----- Function: turn() ----- // 
+/*
+ * turn()
+ * @brief
+ */
 this.turn = function(cell){
 	// Take a look around
 	/* The following are objects for each of the five squares the troll can see during each turn. 
